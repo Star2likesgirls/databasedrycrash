@@ -1,1 +1,1 @@
-database of paid
+Users that are allowed to use drycrash addon
