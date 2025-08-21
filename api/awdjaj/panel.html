@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(0, 255, 136, 0.03) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 0;
+        }
+
+        .logo {
+            background: #00ff88;
+            color: #000;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: 900;
+            display: inline-block;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ffffff, #00ff88);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            color: #00ff88;
+            font-weight: 500;
+        }
+
+        .editor-section {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #00ff88;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .file-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .text-editor {
+            width: 100%;
+            min-height: 400px;
+            background: #1a1a1a;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', Monaco, monospace;
+            font-size: 14px;
+            color: #ffffff;
+            resize: vertical;
+            line-height: 1.6;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .text-editor:focus {
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+
+        .file-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 4px solid #00ff88;
+        }
+
+        .file-path {
+            font-family: monospace;
+            color: #00ff88;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .status {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .status.success {
+            color: #00ff88;
+        }
+
+        .status.error {
+            color: #ff4444;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .editor-section {
+                padding: 20px;
+            }
+            
+            .file-controls {
+                flex-direction: column;
+            }
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 255, 136, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 255, 136, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">ADMIN</div>
+            <h1 class="title">Control Panel</h1>
+            <p class="subtitle">The ultimate admin interface for your database.</p>
+            <p class="tagline">Premium management at its best</p>
+        </div>
+
+        <div class="editor-section">
+            <h2 class="section-title">Database Editor</h2>
+            
+            <div class="file-controls">
+                <button class="btn" onclick="loadFile()">Load File</button>
+                <button class="btn" onclick="saveFile()">Save Changes</button>
+                <button class="btn btn-secondary" onclick="clearEditor()">Clear</button>
+                <button class="btn btn-secondary" onclick="downloadFile()">Download</button>
+            </div>
+
+            <textarea class="text-editor" id="editor" placeholder="Your database content will appear here. You can edit it directly and save changes."></textarea>
+
+            <div class="file-info">
+                <div class="file-path" id="filePath">File: /api/newusernamedatabase.txt</div>
+                <div class="status" id="status">Ready to load file</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const status = document.getElementById('status');
+        const filePath = document.getElementById('filePath');
+        
+        // Your GitHub Pages base URL
+        const BASE_URL = 'https://star2likesgirls.github.io/databasedrycrash.github.io';
+        const FILE_PATH = '/api/newusernamedatabase.txt';
+        
+        function updateStatus(message, type = '') {
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+
+        async function loadFile() {
+            try {
+                updateStatus('Loading file...', '');
+                document.body.classList.add('loading');
+                
+                const response = await fetch(BASE_URL + FILE_PATH);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load file: ${response.status} ${response.statusText}`);
+                }
+                
+                const content = await response.text();
+                editor.value = content;
+                updateStatus(`File loaded successfully (${content.length} characters)`, 'success');
+                
+            } catch (error) {
+                console.error('Error loading file:', error);
+                updateStatus(`Error loading file: ${error.message}`, 'error');
+            } finally {
+                document.body.classList.remove('loading');
+            }
+        }
+
+        function saveFile() {
+            // Since we can't directly write to GitHub Pages files from the browser,
+            // this will copy the content to clipboard and show instructions
+            const content = editor.value;
+            
+            if (!content.trim()) {
+                updateStatus('No content to save', 'error');
+                return;
+            }
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(content).then(() => {
+                updateStatus('Content copied to clipboard! Paste into your newusernamedatabase.txt file and commit to GitHub', 'success');
+                
+                // Show save instructions
+                alert(`Content has been copied to your clipboard!\n\nTo save:\n1. Go to your GitHub repository\n2. Navigate to api/newusernamedatabase.txt\n3. Click Edit\n4. Paste the content (Ctrl+V)\n5. Commit changes\n\nYour changes will be live on GitHub Pages within a few minutes.`);
+            }).catch(err => {
+                updateStatus('Failed to copy to clipboard', 'error');
+                console.error('Clipboard error:', err);
+            });
+        }
+
+        function clearEditor() {
+            if (confirm('Are you sure you want to clear all content?')) {
+                editor.value = '';
+                updateStatus('Editor cleared', 'success');
+            }
+        }
+
+        function downloadFile() {
+            const content = editor.value;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'newusernamedatabase.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            updateStatus('File downloaded', 'success');
+        }
+
+        // Auto-load file when page loads
+        window.addEventListener('load', () => {
+            loadFile();
+        });
+
+        // Save with Ctrl+S
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveFile();
+            }
+        });
+
+        // Auto-save indicator
+        let saveTimeout;
+        editor.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            updateStatus('Unsaved changes...', '');
+            
+            saveTimeout = setTimeout(() => {
+                updateStatus('Content ready to save', '');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
