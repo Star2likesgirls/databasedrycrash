@@ -93,11 +93,12 @@
             font-weight: 600;
         }
 
-        .file-controls {
+        .file-controls, .search-controls {
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .btn {
@@ -135,7 +136,7 @@
             border-color: rgba(255, 255, 255, 0.3);
         }
 
-        .text-editor {
+        .text-editor, .stats-display {
             width: 100%;
             min-height: 400px;
             background: #1a1a1a;
@@ -151,7 +152,29 @@
             transition: border-color 0.3s ease;
         }
 
-        .text-editor:focus {
+        .text-editor:focus, .stats-display:focus {
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+
+        .stats-display {
+            min-height: 200px;
+            white-space: pre-wrap;
+        }
+
+        .search-input {
+            background: #1a1a1a;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: #ffffff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            min-width: 200px;
+        }
+
+        .search-input:focus {
             border-color: #00ff88;
             box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
         }
@@ -184,82 +207,7 @@
             color: #ff4444;
         }
 
-        .stats-display {
-            background: #1a1a1a;
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 15px;
-            max-height: 400px;
-            overflow-y: auto;
-            font-family: 'Courier New', Monaco, monospace;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #ffffff;
-            white-space: pre-wrap;
-            min-height: 200px;
-        }
-
-        .stats-display:focus {
-            border-color: #00ff88;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
-            outline: none;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .stat-card {
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            border-radius: 8px;
-            padding: 15px;
-        }
-
-        .stat-label {
-            color: #00ff88;
-            font-size: 12px;
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .stat-value {
-            color: #ffffff;
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .search-input {
-            width: 100%;
-            max-width: 300px;
-            background: #1a1a1a;
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            border-radius: 8px;
-            padding: 12px 15px;
-            color: #ffffff;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.3s ease;
-            margin-right: 15px;
-        }
-
-        .search-input:focus {
-            border-color: #00ff88;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
-        }
-
-        .search-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
+        @media (max-width: 768px) {
             .title {
                 font-size: 2.5rem;
             }
@@ -268,12 +216,17 @@
                 padding: 15px;
             }
             
-            .editor-section {
+            .editor-section, .stats-section {
                 padding: 20px;
             }
             
-            .file-controls {
+            .file-controls, .search-controls {
                 flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-input {
+                min-width: unset;
             }
         }
 
@@ -345,6 +298,7 @@
     </div>
 
     <script>
+        // DOM Elements
         const editor = document.getElementById('editor');
         const status = document.getElementById('status');
         const filePath = document.getElementById('filePath');
@@ -356,14 +310,20 @@
         const BASE_URL = 'https://star2likesgirls.github.io/databasedrycrash.github.io';
         const FILE_PATH = '/api/newusernamedatabase.txt';
         const DONUT_API = 'https://api.donutsmp.net/v1/stats';
-        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
-        const API_KEY = '1af2ca54128a44234d953da1be7069c5'; // Your DonutSMP API key
-        
+        const API_KEY = '1af2ca54128a44234d953da1be7069c5';
+
+        // Status update functions
         function updateStatus(message, type = '') {
             status.textContent = message;
             status.className = 'status ' + type;
         }
 
+        function updateStatsStatus(message, type = '') {
+            statsStatus.textContent = message;
+            statsStatus.className = 'status ' + type;
+        }
+
+        // File management functions
         async function loadFile() {
             try {
                 updateStatus('Loading file...', '');
@@ -388,8 +348,6 @@
         }
 
         function saveFile() {
-            // Since we can't directly write to GitHub Pages files from the browser,
-            // this will copy the content to clipboard and show instructions
             const content = editor.value;
             
             if (!content.trim()) {
@@ -397,12 +355,10 @@
                 return;
             }
             
-            // Copy to clipboard
             navigator.clipboard.writeText(content).then(() => {
-                updateStatus('Content copied to clipboard! Paste into your newusernamedatabase.txt file and commit to GitHub', 'success');
+                updateStatus('Content copied to clipboard! Update your GitHub file to save changes', 'success');
                 
-                // Show save instructions
-                alert(`Content has been copied to your clipboard!\n\nTo save:\n1. Go to your GitHub repository\n2. Navigate to api/newusernamedatabase.txt\n3. Click Edit\n4. Paste the content (Ctrl+V)\n5. Commit changes\n\nYour changes will be live on GitHub Pages within a few minutes.`);
+                alert(`Content copied to clipboard!\n\nTo save:\n1. Go to your GitHub repository\n2. Navigate to api/newusernamedatabase.txt\n3. Click Edit\n4. Paste content (Ctrl+V)\n5. Commit changes`);
             }).catch(err => {
                 updateStatus('Failed to copy to clipboard', 'error');
                 console.error('Clipboard error:', err);
@@ -429,14 +385,9 @@
             URL.revokeObjectURL(url);
             updateStatus('File downloaded', 'success');
         }
-            statsStatus.textContent = message;
-            statsStatus.className = 'status ' + type;
-        }
 
-        function updateStatsStatus(message, type = '') {
-            statsStatus.textContent = message;
-            statsStatus.className = 'status ' + type;
-        }
+        // Player stats functions
+        async function lookupPlayer() {
             const username = playerSearch.value.trim();
             
             if (!username) {
@@ -448,7 +399,6 @@
                 updateStatsStatus('Looking up player stats...', '');
                 console.log(`Looking up player: ${username}`);
                 
-                // Try direct request with proper Bearer token
                 const response = await fetch(`${DONUT_API}/${username}`, {
                     method: 'GET',
                     headers: {
@@ -460,14 +410,13 @@
                 });
                 
                 console.log('Response status:', response.status);
-                console.log('Response headers:', [...response.headers.entries()]);
                 
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.log('Error response:', errorText);
                     
                     if (response.status === 401) {
-                        throw new Error('Unauthorized - API Key may be invalid or expired');
+                        throw new Error('Unauthorized - API Key may be invalid');
                     } else if (response.status === 404) {
                         throw new Error('Player not found');
                     } else if (response.status === 429) {
@@ -480,23 +429,17 @@
                 const data = await response.json();
                 console.log('API Data:', data);
                 displayPlayerStats(data, username);
-                updateStatsStatus(`Stats loaded for ${username}`, 'success');
                 
             } catch (error) {
                 console.error('Full error:', error);
                 
                 if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                    updateStatsStatus('CORS Error: Cannot connect to DonutSMP API from browser. API may not allow cross-origin requests.', 'error');
-                    
-                    // Show a helpful message about CORS
-                    setTimeout(() => {
-                        alert(`CORS Issue Detected!\n\nThe DonutSMP API doesn't allow requests from web browsers due to CORS policy.\n\nSolutions:\n1. Use a browser extension like "CORS Unblock"\n2. Test the API directly: https://api.donutsmp.net/v1/stats/${username}\n3. Use a backend service instead of client-side requests`);
-                    }, 1000);
-                    
+                    updateStatsStatus('CORS Error: Cannot connect to DonutSMP API from browser', 'error');
+                    statsDisplay.value = `CORS ERROR: The DonutSMP API doesn't allow requests from web browsers.\n\nThis is a security feature that blocks cross-origin requests.\n\nSolutions:\n1. Install a CORS browser extension\n2. Test API directly: https://api.donutsmp.net/v1/stats/${username}\n3. Use a backend service instead\n\nTime: ${new Date().toLocaleString()}`;
                 } else {
                     updateStatsStatus(`Error: ${error.message}`, 'error');
+                    statsDisplay.value = `ERROR: ${error.message}\n\nTime: ${new Date().toLocaleString()}`;
                 }
-                statsDisplay.value = `ERROR: ${error.message}\n\nTime: ${new Date().toLocaleString()}`;
             }
         }
 
@@ -504,7 +447,6 @@
             let output = `=== PLAYER STATS FOR: ${username.toUpperCase()} ===\n\n`;
             
             if (data && typeof data === 'object') {
-                // Display all stats in a clean text format
                 for (const [key, value] of Object.entries(data)) {
                     if (value !== null && value !== undefined) {
                         const formattedKey = formatStatName(key).padEnd(25, '.');
@@ -552,82 +494,13 @@
                 lookupPlayer();
             }
         }
-            status.textContent = message;
-            status.className = 'status ' + type;
-        }
-
-        async function loadFile() {
-            try {
-                updateStatus('Loading file...', '');
-                document.body.classList.add('loading');
-                
-                const response = await fetch(BASE_URL + FILE_PATH);
-                
-                if (!response.ok) {
-                    throw new Error(`Failed to load file: ${response.status} ${response.statusText}`);
-                }
-                
-                const content = await response.text();
-                editor.value = content;
-                updateStatus(`File loaded successfully (${content.length} characters)`, 'success');
-                
-            } catch (error) {
-                console.error('Error loading file:', error);
-                updateStatus(`Error loading file: ${error.message}`, 'error');
-            } finally {
-                document.body.classList.remove('loading');
-            }
-        }
-
-        function saveFile() {
-            // Since we can't directly write to GitHub Pages files from the browser,
-            // this will copy the content to clipboard and show instructions
-            const content = editor.value;
-            
-            if (!content.trim()) {
-                updateStatus('No content to save', 'error');
-                return;
-            }
-            
-            // Copy to clipboard
-            navigator.clipboard.writeText(content).then(() => {
-                updateStatus('Content copied to clipboard! Paste into your newusernamedatabase.txt file and commit to GitHub', 'success');
-                
-                // Show save instructions
-                alert(`Content has been copied to your clipboard!\n\nTo save:\n1. Go to your GitHub repository\n2. Navigate to api/newusernamedatabase.txt\n3. Click Edit\n4. Paste the content (Ctrl+V)\n5. Commit changes\n\nYour changes will be live on GitHub Pages within a few minutes.`);
-            }).catch(err => {
-                updateStatus('Failed to copy to clipboard', 'error');
-                console.error('Clipboard error:', err);
-            });
-        }
-
-        function clearEditor() {
-            if (confirm('Are you sure you want to clear all content?')) {
-                editor.value = '';
-                updateStatus('Editor cleared', 'success');
-            }
-        }
-
-        function downloadFile() {
-            const content = editor.value;
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'newusernamedatabase.txt';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            updateStatus('File downloaded', 'success');
-        }
 
         // Auto-load file when page loads
         window.addEventListener('load', () => {
             loadFile();
         });
 
-        // Save with Ctrl+S
+        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
@@ -635,7 +508,7 @@
             }
         });
 
-        // Auto-save indicator
+        // Auto-save indicator for database editor
         let saveTimeout;
         editor.addEventListener('input', () => {
             clearTimeout(saveTimeout);
