@@ -192,6 +192,18 @@
             margin-top: 15px;
             max-height: 400px;
             overflow-y: auto;
+            font-family: 'Courier New', Monaco, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ffffff;
+            white-space: pre-wrap;
+            min-height: 200px;
+        }
+
+        .stats-display:focus {
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+            outline: none;
         }
 
         .stats-grid {
@@ -305,9 +317,7 @@
                 <button class="btn btn-secondary" onclick="clearStats()">Clear</button>
             </div>
 
-            <div class="stats-display" id="statsDisplay" style="display: none;">
-                <div id="statsContent"></div>
-            </div>
+            <textarea class="stats-display" id="statsDisplay" readonly placeholder="Player stats will appear here after lookup..."></textarea>
 
             <div class="file-info">
                 <div class="file-path">API: https://api.donutsmp.net/v1/stats/{user}</div>
@@ -340,7 +350,6 @@
         const filePath = document.getElementById('filePath');
         const playerSearch = document.getElementById('playerSearch');
         const statsDisplay = document.getElementById('statsDisplay');
-        const statsContent = document.getElementById('statsContent');
         const statsStatus = document.getElementById('statsStatus');
         
         // API Configuration
@@ -350,12 +359,84 @@
         const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
         const API_KEY = '1af2ca54128a44234d953da1be7069c5'; // Your DonutSMP API key
         
-        function updateStatsStatus(message, type = '') {
+        function updateStatus(message, type = '') {
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+
+        async function loadFile() {
+            try {
+                updateStatus('Loading file...', '');
+                document.body.classList.add('loading');
+                
+                const response = await fetch(BASE_URL + FILE_PATH);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load file: ${response.status} ${response.statusText}`);
+                }
+                
+                const content = await response.text();
+                editor.value = content;
+                updateStatus(`File loaded successfully (${content.length} characters)`, 'success');
+                
+            } catch (error) {
+                console.error('Error loading file:', error);
+                updateStatus(`Error loading file: ${error.message}`, 'error');
+            } finally {
+                document.body.classList.remove('loading');
+            }
+        }
+
+        function saveFile() {
+            // Since we can't directly write to GitHub Pages files from the browser,
+            // this will copy the content to clipboard and show instructions
+            const content = editor.value;
+            
+            if (!content.trim()) {
+                updateStatus('No content to save', 'error');
+                return;
+            }
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(content).then(() => {
+                updateStatus('Content copied to clipboard! Paste into your newusernamedatabase.txt file and commit to GitHub', 'success');
+                
+                // Show save instructions
+                alert(`Content has been copied to your clipboard!\n\nTo save:\n1. Go to your GitHub repository\n2. Navigate to api/newusernamedatabase.txt\n3. Click Edit\n4. Paste the content (Ctrl+V)\n5. Commit changes\n\nYour changes will be live on GitHub Pages within a few minutes.`);
+            }).catch(err => {
+                updateStatus('Failed to copy to clipboard', 'error');
+                console.error('Clipboard error:', err);
+            });
+        }
+
+        function clearEditor() {
+            if (confirm('Are you sure you want to clear all content?')) {
+                editor.value = '';
+                updateStatus('Editor cleared', 'success');
+            }
+        }
+
+        function downloadFile() {
+            const content = editor.value;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'newusernamedatabase.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            updateStatus('File downloaded', 'success');
+        }
             statsStatus.textContent = message;
             statsStatus.className = 'status ' + type;
         }
 
-        async function lookupPlayer() {
+        function updateStatsStatus(message, type = '') {
+            statsStatus.textContent = message;
+            statsStatus.className = 'status ' + type;
+        }
             const username = playerSearch.value.trim();
             
             if (!username) {
@@ -415,35 +496,30 @@
                 } else {
                     updateStatsStatus(`Error: ${error.message}`, 'error');
                 }
-                statsDisplay.style.display = 'none';
+                statsDisplay.value = `ERROR: ${error.message}\n\nTime: ${new Date().toLocaleString()}`;
             }
         }
 
         function displayPlayerStats(data, username) {
-            let html = `<h3 style="color: #00ff88; margin-bottom: 20px;">Stats for ${username}</h3>`;
+            let output = `=== PLAYER STATS FOR: ${username.toUpperCase()} ===\n\n`;
             
             if (data && typeof data === 'object') {
-                html += '<div class="stats-grid">';
-                
-                // Display all stats dynamically
+                // Display all stats in a clean text format
                 for (const [key, value] of Object.entries(data)) {
                     if (value !== null && value !== undefined) {
-                        html += `
-                            <div class="stat-card">
-                                <div class="stat-label">${formatStatName(key)}</div>
-                                <div class="stat-value">${formatStatValue(value)}</div>
-                            </div>
-                        `;
+                        const formattedKey = formatStatName(key).padEnd(25, '.');
+                        const formattedValue = formatStatValue(value);
+                        output += `${formattedKey} ${formattedValue}\n`;
                     }
                 }
-                
-                html += '</div>';
             } else {
-                html += '<p style="color: #888;">No stats data available for this player.</p>';
+                output += 'No stats data available for this player.\n';
             }
             
-            statsContent.innerHTML = html;
-            statsDisplay.style.display = 'block';
+            output += `\n=== END OF STATS ===\nRetrieved: ${new Date().toLocaleString()}`;
+            
+            statsDisplay.value = output;
+            updateStatsStatus(`Stats loaded for ${username}`, 'success');
         }
 
         function formatStatName(key) {
@@ -466,7 +542,7 @@
         }
 
         function clearStats() {
-            statsDisplay.style.display = 'none';
+            statsDisplay.value = '';
             playerSearch.value = '';
             updateStatsStatus('Enter a username to lookup player stats', '');
         }
